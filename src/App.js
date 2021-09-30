@@ -1,9 +1,16 @@
 import './App.css';
 import React, {useState} from 'react';
 import ATMDeposit from "./ATMDeposit";
-import Manager from "./Manager";
+import AccountForm from "./AccountForm";
+import Account from "./Account";
 
 function App() {
+    const [accounts, setAccounts] = useState([
+        {
+            Number: '10000-1',
+            Balance: 1000
+        }
+    ])
     const [account, setAccount] = useState('')
     const [deposit, setDeposit] = React.useState(0);
     const [totalState, setTotalState] = useState(0);
@@ -13,9 +20,23 @@ function App() {
 
     let status = `${account} Balance $ ${totalState} `;
 
-    const selectAccount = (account) => {
-        console.log(account)
+    const addAccount = (Number) => {
+        const newAccounts = [...accounts, {Number, Balance: 0}];
+        setAccounts(newAccounts);
+    }
+    const removeAccount = index => {
+        let temp = [...accounts];
+        temp.splice(index, 1);
+        setAccounts(temp);
+        if (account === accounts[index].Number){
+            setAccount('')
+        }
+    }
+
+    const selectAccount = (account, balance, accounts) => {
         setAccount(account);
+        setTotalState(balance);
+        console.log(accounts)
     }
 
     const handleChange = (event) => {
@@ -30,11 +51,16 @@ function App() {
         }
     };
     const handleSubmit = (event) => {
-        if (deposit > totalState && atmMode === 'Cash Back') {
+        // eslint-disable-next-line no-mixed-operators
+        if (deposit > totalState && atmMode === 'Cash Back' || account === '') {
             setValidTransaction(true);
         } else {
             let newTotal = isDeposit ? totalState + deposit : totalState - deposit;
             setTotalState(newTotal);
+            let temp = [...accounts];
+            const index = (temp.findIndex(acc => acc.Number === account))
+            temp.splice(index, 1, {Number: account, Balance: newTotal});
+            setAccounts(temp);
         }
         event.preventDefault();
     };
@@ -49,7 +75,12 @@ function App() {
     return (
         <form onSubmit={handleSubmit}>
             <label>Select a bank account</label>
-            <Manager setAccount={selectAccount}/>
+            <div className="account-list" >
+                {accounts.map((account, i) => (
+                    <Account key={i} index={i} account={account} remove={removeAccount} select={selectAccount}/>
+                ))}
+                <AccountForm addAccount={addAccount} />
+            </div>
             {
                 (account !== '') &&
                 <div>
